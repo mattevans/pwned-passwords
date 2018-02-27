@@ -41,6 +41,7 @@ func main() {
      // Woo!
      // All clear!
   }
+}
 ```
 
 **Expire in-memory cache**
