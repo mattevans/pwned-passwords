@@ -36,7 +36,7 @@ func main() {
 
   if pwned {
       // Oh dear!
-     / You should avoid using that password
+      // You should avoid using that password
   } else {
      // Woo!
      // All clear!
