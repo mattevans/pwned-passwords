@@ -18,19 +18,29 @@ Usage
 -----------------
 
 ```go
-// Init a client.
-client := NewClient()
+package main
 
-// Check to see if your given string is compromised.
-pwned, err := client.Pwned.Compromised("string to check")
-if err != nil {
-  return err
-}
+import (
+	hibp "github.com/mattevans/pwned-passwords"
+)
 
-if pwned {
-    // Oh dear!
-}
+func main() {
+  // Init a client.
+  client := hibp.NewClient()
 
+  // Check to see if your given string is compromised.
+  pwned, err := client.Pwned.Compromised("string to check")
+  if err != nil {
+    return err
+  }
+
+  if pwned {
+      // Oh dear!
+     / You should avoid using that password
+  } else {
+     // Woo!
+     // All clear!
+  }
 ```
 
 **Expire in-memory cache**
