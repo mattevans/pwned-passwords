@@ -21,7 +21,9 @@ Usage
 package main
 
 import (
+        "fmt"
 	hibp "github.com/mattevans/pwned-passwords"
+	"os"
 )
 
 func main() {
@@ -31,7 +33,8 @@ func main() {
   // Check to see if your given string is compromised.
   pwned, err := client.Pwned.Compromised("string to check")
   if err != nil {
-    return err
+      fmt.Println("Pwned failed")
+      os.Exit(1)
   }
 
   if pwned {
