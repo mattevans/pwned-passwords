@@ -21,9 +21,10 @@ Usage
 package main
 
 import (
-        "fmt"
-	hibp "github.com/mattevans/pwned-passwords"
+  "fmt"
 	"os"
+
+	hibp "github.com/mattevans/pwned-passwords"
 )
 
 func main() {
