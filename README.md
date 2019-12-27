@@ -34,16 +34,12 @@ func main() {
     // Check to see if your given string is compromised.
     pwned, err := client.Pwned.Compromised("string to check")
     if err != nil {
-        fmt.Println("Pwned failed")
         os.Exit(1)
     }
 
     if pwned {
-        // Oh dear!
+        // Oh dear! 😱
         // You should avoid using that password
-    } else {
-        // Woo!
-        // All clear!
     }
 }
 ```
@@ -51,11 +47,11 @@ func main() {
 **Expire in-memory cache**
 
 ```go
-client.Cache.Expire(HASHED_VALUE)
+client.Store.Expire(HASHED_VALUE)
 ```
 
 ```go
-client.Cache.ExpireAll()
+client.Store.ExpireAll()
 ```
 
 Contributing
