@@ -56,12 +56,17 @@ func (s *StoreService) IsExpired(hash string) bool {
 	return true
 }
 
-// Expire will expire the cache for a given hash.
-func (s *StoreService) Expire(hash string) {
+// Delete will remove an item from the store by hash.
+func (s *StoreService) Delete(hash string) {
 	s.store.Delete(hash)
 }
 
-// ExpireAll will expire all cache.
-func (s *StoreService) ExpireAll() {
+// DeleteExpired will remove all expired items from the store.
+func (s *StoreService) DeleteExpired() {
+	s.store.DeleteExpired()
+}
+
+// PurgeAll will flush the store.
+func (s *StoreService) PurgeAll() {
 	s.store.Flush()
 }
