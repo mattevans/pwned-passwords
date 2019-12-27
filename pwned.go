@@ -28,7 +28,6 @@ func (s *PwnedService) Compromised(value string) (bool, error) {
 
 	// If we have cached results, use them.
 	if hit, ok := s.client.Store.Get(hashedStr); ok {
-		hashedStr = hit.Hash
 		return hit.Compromised, err
 	}
 
