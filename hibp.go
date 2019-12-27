@@ -8,10 +8,13 @@ import (
 	"net/http"
 	"net/url"
 	"strings"
+	"time"
+
+	gc "github.com/patrickmn/go-cache"
 )
 
 const (
-	packageVersion = "0.0.1"
+	packageVersion = "0.2.0"
 	backendURL     = "https://api.pwnedpasswords.com"
 	userAgent      = "pwned-passwords-golang/" + packageVersion
 )
@@ -25,7 +28,7 @@ type Client struct {
 
 	// Services used for communicating with the API.
 	Pwned *PwnedService
-	Cache *CacheService
+	Store *StoreService
 }
 
 type service struct {
@@ -34,7 +37,7 @@ type service struct {
 
 // NewClient creates a new Client with the appropriate connection details and
 // services used for communicating with the API.
-func NewClient() *Client {
+func NewClient(expiry time.Duration) *Client {
 	// Init new http.Client.
 	httpClient := http.DefaultClient
 
@@ -47,8 +50,13 @@ func NewClient() *Client {
 		UserAgent:  userAgent,
 	}
 
+	// Init a new store.
+	store := gc.New(expiry, 10*time.Minute)
+
+	// Init services.
 	c.Pwned = &PwnedService{client: c}
-	c.Cache = &CacheService{client: c}
+	c.Store = NewStoreService(c, store)
+
 	return c
 }
 
