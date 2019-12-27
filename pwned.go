@@ -7,19 +7,11 @@ import (
 	"fmt"
 	"strconv"
 	"strings"
-	"time"
 )
 
 // PwnedService handles retrieving pwned hashes from in-memory cache or
 // by fetching fresh results.
 type PwnedService service
-
-// PwnedStore holds our pwned password hashes and compromised status.
-type PwnedStore struct {
-	Hash        string     `json:"hash"`
-	Compromised bool       `json:"compromised"`
-	UpdatedAt   *time.Time `json:"updated_at"`
-}
 
 // Compromised will build and execute a request to HIBP to check to see
 // if the passed value is compromised or not.
@@ -35,10 +27,8 @@ func (s *PwnedService) Compromised(value string) (bool, error) {
 	hashedStr := _hashString(value)
 
 	// If we have cached results, use them.
-	cache := s.client.Cache.Get(hashedStr)
-	if cache != nil {
-		hashedStr = cache.Hash
-		return cache.Compromised, err
+	if hit, ok := s.client.Store.Get(hashedStr); ok {
+		return hit.Compromised, err
 	}
 
 	// Pop our prefix and suffix.
@@ -67,7 +57,7 @@ func (s *PwnedService) Compromised(value string) (bool, error) {
 			}
 
 			// Store in cache as compromised.
-			s.client.Cache.Store(hashedStr, true)
+			s.client.Store.Store(hashedStr, true)
 
 			// Return.
 			return true, err
@@ -75,7 +65,7 @@ func (s *PwnedService) Compromised(value string) (bool, error) {
 	}
 
 	// Store in cache as non-compromised.
-	s.client.Cache.Store(hashedStr, false)
+	s.client.Store.Store(hashedStr, false)
 
 	// Return.
 	return false, err

@@ -8,11 +8,15 @@ import (
 	. "github.com/onsi/gomega"
 )
 
+const (
+	testStoreExpiry = 1 * time.Minute
+)
+
 // TestCompromisedHash will test a compromised value against the HIBP API.
 func TestCompromisedHash(t *testing.T) {
 	// Register the test.
 	RegisterTestingT(t)
-	client := NewClient()
+	client := NewClient(testStoreExpiry)
 
 	// Check if input is compromised.
 	compromised, err := client.Pwned.Compromised("p@ssword")
@@ -29,7 +33,7 @@ func TestCompromisedHash(t *testing.T) {
 func TestNonCompromisedHash(t *testing.T) {
 	// Register the test.
 	RegisterTestingT(t)
-	client := NewClient()
+	client := NewClient(testStoreExpiry)
 
 	// Check if input is compromised.
 	value := fmt.Sprintf("SHOULD_NOT_BE_COMPROMISED_%s", time.Now().Format("2006-01-02 15:04:05"))
@@ -46,7 +50,7 @@ func TestNonCompromisedHash(t *testing.T) {
 func TestEmptyCompromisedHash(t *testing.T) {
 	// Register the test.
 	RegisterTestingT(t)
-	client := NewClient()
+	client := NewClient(testStoreExpiry)
 
 	// Check if input is compromised.
 	compromised, err := client.Pwned.Compromised("")

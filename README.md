@@ -7,7 +7,7 @@
 
 A simple [Go](http://golang.org) client library for checking compromised passwords against [HIBP Pwned Passwords](https://haveibeenpwned.com/Passwords).
 
-Upon request, results will be cached (in-memory), keyed by hash. With a two hour expiry window, subsequent requests will use cached data or fetch fresh data accordingly.
+Upon request, results will be cached (in-memory) for a configurable window, keyed by hash.
 
 Installation
 -----------------
@@ -23,39 +23,47 @@ package main
 import (
     "fmt"
     "os"
+    "time"
 
     hibp "github.com/mattevans/pwned-passwords"
 )
 
+const (
+    storeExpiry = 1 * time.Hour
+)
+
 func main() {
     // Init a client.
-    client := hibp.NewClient()
+    client := hibp.NewClient(storeExpiry)
 
     // Check to see if your given string is compromised.
     pwned, err := client.Pwned.Compromised("string to check")
     if err != nil {
-        fmt.Println("Pwned failed")
         os.Exit(1)
     }
 
     if pwned {
-        // Oh dear!
+        // Oh dear! 😱
         // You should avoid using that password
-    } else {
-        // Woo!
-        // All clear!
     }
 }
 ```
 
-**Expire in-memory cache**
+**Managing the inmemory store**
 
 ```go
-client.Cache.Expire(HASHED_VALUE)
+// Delete will remove an item from the store by hash.
+client.Store.Delete(HASHED_VALUE)
 ```
 
 ```go
-client.Cache.ExpireAll()
+// DeleteExpired will remove all expired items from the store.
+client.Store.DeleteExpired()
+```
+
+```go
+// PurgeAll will flush the store.
+client.Store.PurgeAll()
 ```
 
 Contributing
