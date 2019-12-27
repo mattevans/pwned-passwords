@@ -21,29 +21,30 @@ Usage
 package main
 
 import (
-        "fmt"
-	hibp "github.com/mattevans/pwned-passwords"
-	"os"
+    "fmt"
+    "os"
+
+    hibp "github.com/mattevans/pwned-passwords"
 )
 
 func main() {
-  // Init a client.
-  client := hibp.NewClient()
+    // Init a client.
+    client := hibp.NewClient()
 
-  // Check to see if your given string is compromised.
-  pwned, err := client.Pwned.Compromised("string to check")
-  if err != nil {
-      fmt.Println("Pwned failed")
-      os.Exit(1)
-  }
+    // Check to see if your given string is compromised.
+    pwned, err := client.Pwned.Compromised("string to check")
+    if err != nil {
+        fmt.Println("Pwned failed")
+        os.Exit(1)
+    }
 
-  if pwned {
-      // Oh dear!
-      // You should avoid using that password
-  } else {
-     // Woo!
-     // All clear!
-  }
+    if pwned {
+        // Oh dear!
+        // You should avoid using that password
+    } else {
+        // Woo!
+        // All clear!
+    }
 }
 ```
 
