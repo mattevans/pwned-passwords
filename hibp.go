@@ -119,5 +119,5 @@ func (c *Client) Do(req *http.Request) ([]string, error) {
 	}
 
 	// Response is returned as new-line'd string, split and return.
-	return strings.Split(string(body), "\r\n"), err
+	return strings.Split(strings.Replace(string(body), "\r\n", "\n", -1), "\n"), err
 }
