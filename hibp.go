@@ -15,7 +15,7 @@ import (
 )
 
 const (
-	packageVersion = "0.4.0"
+	packageVersion = "0.5.0"
 	backendURL     = "https://api.pwnedpasswords.com"
 	userAgent      = "pwned-passwords-golang/" + packageVersion
 )
