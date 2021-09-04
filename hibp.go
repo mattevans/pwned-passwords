@@ -2,19 +2,20 @@ package hibp
 
 import (
 	"bytes"
+	"crypto/sha1"
+	"encoding/hex"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io/ioutil"
 	"net/http"
 	"net/url"
+	"strconv"
 	"strings"
-	"time"
-
-	gc "github.com/patrickmn/go-cache"
 )
 
 const (
-	packageVersion = "0.2.0"
+	packageVersion = "0.4.0"
 	backendURL     = "https://api.pwnedpasswords.com"
 	userAgent      = "pwned-passwords-golang/" + packageVersion
 )
@@ -22,57 +23,38 @@ const (
 // Client holds a connection to the HIBP API.
 type Client struct {
 	client     *http.Client
-	AppID      string
 	UserAgent  string
 	BackendURL *url.URL
-
-	// Services used for communicating with the API.
-	Pwned *PwnedService
-	Store *StoreService
 }
 
-type service struct {
-	client *Client
-}
-
-// NewClient creates a new Client with the appropriate connection details and
-// services used for communicating with the API.
-func NewClient(expiry time.Duration) *Client {
-	// Init new http.Client.
-	httpClient := http.DefaultClient
-
-	// Parse BE URL.
+// NewClient creates a new Client with the appropriate connection details and services used for
+// communicating with the API.
+func NewClient() *Client {
 	baseURL, _ := url.Parse(backendURL)
 
-	c := &Client{
-		client:     httpClient,
+	return &Client{
+		client:     http.DefaultClient,
 		BackendURL: baseURL,
 		UserAgent:  userAgent,
 	}
+}
 
-	// Init a new store.
-	store := gc.New(expiry, 10*time.Minute)
-
-	// Init services.
-	c.Pwned = &PwnedService{client: c}
-	c.Store = NewStoreService(c, store)
-
+// SetHTTPClient sets a *http.Client for the HIBP Client to use. Useful for customising timeout behaviour etc.
+func (c *Client) SetHTTPClient(client *http.Client) *Client {
+	c.client = client
 	return c
 }
 
-// NewRequest creates an API request. A relative URL can be provided in urlPath,
-// which will be resolved to the BackendURL of the Client.
+// NewRequest creates an API request. A relative URL can be provided in urlPath, which will be resolved
+// to the BackendURL of the Client.
 func (c *Client) NewRequest(method, urlPath string, body interface{}) (*http.Request, error) {
-	// Parse our URL.
 	rel, err := url.Parse(urlPath)
 	if err != nil {
 		return nil, err
 	}
 
-	// Resolve to absolute URI.
-	u := c.BackendURL.ResolveReference(rel)
-
 	buf := new(bytes.Buffer)
+
 	if body != nil {
 		err = json.NewEncoder(buf).Encode(body)
 		if err != nil {
@@ -80,13 +62,11 @@ func (c *Client) NewRequest(method, urlPath string, body interface{}) (*http.Req
 		}
 	}
 
-	// Create the request.
-	req, err := http.NewRequest(method, u.String(), buf)
+	req, err := http.NewRequest(method, c.BackendURL.ResolveReference(rel).String(), buf)
 	if err != nil {
 		return nil, err
 	}
 
-	// Add our packages UA.
 	req.Header.Add("User-Agent", c.UserAgent)
 
 	return req, nil
@@ -109,15 +89,55 @@ func (c *Client) Do(req *http.Request) ([]string, error) {
 	// The API should always return a 200 (unless something is wrong) as per
 	// https://haveibeenpwned.com/API/v2#SearchingPwnedPasswordsByRange
 	if resp.StatusCode != http.StatusOK {
-		return nil, fmt.Errorf("Unexpected API response status: %v", resp.StatusCode)
+		return nil, fmt.Errorf("unexpected API response status: %v", resp.StatusCode)
 	}
 
-	// Parse our resp.Body.
 	body, err := ioutil.ReadAll(resp.Body)
 	if err != nil {
 		return nil, err
 	}
 
 	// Response is returned as new-line'd string, split and return.
-	return strings.Split(strings.Replace(string(body), "\r\n", "\n", -1), "\n"), err
+	return strings.Split(strings.ReplaceAll(string(body), "\r\n", "\n"), "\n"), err
+}
+
+// Compromised will build and execute a request to HIBP to check to see if the passed value is compromised or not.
+func (c *Client) Compromised(value string) (bool, error) {
+	if value == "" {
+		return false, errors.New("value for compromised check cannot be empty")
+	}
+
+	hashedStr := hashString(value)
+	prefix := strings.ToUpper(hashedStr[:5])
+	suffix := strings.ToUpper(hashedStr[5:])
+
+	request, err := c.NewRequest("GET", fmt.Sprintf("range/%s", prefix), nil)
+	if err != nil {
+		return false, err
+	}
+
+	response, err := c.Do(request)
+	if err != nil {
+		return false, err
+	}
+
+	for _, target := range response {
+		if target[:35] == suffix {
+			if _, err = strconv.ParseInt(target[36:], 10, 64); err != nil {
+				return false, err
+			}
+
+			return true, err
+		}
+	}
+
+	return false, err
+}
+
+// hashString will return a sha1 hash of the given value.
+func hashString(value string) string {
+	alg := sha1.New()
+	alg.Write([]byte(value))
+
+	return strings.ToUpper(hex.EncodeToString(alg.Sum(nil)))
 }

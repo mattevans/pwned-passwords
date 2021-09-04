@@ -5,9 +5,7 @@
 [![Go Report Card](https://goreportcard.com/badge/github.com/mattevans/pwned-passwords)](https://goreportcard.com/report/github.com/mattevans/pwned-passwords)
 [![license](https://img.shields.io/github/license/mashape/apistatus.svg)](https://github.com/mattevans/pwned-passwords/blob/master/LICENSE)
 
-A simple [Go](http://golang.org) client library for checking compromised passwords against [HIBP Pwned Passwords](https://haveibeenpwned.com/Passwords).
-
-Upon request, results will be cached (in-memory) for a configurable window, keyed by hash.
+A light-weight [Go](http://golang.org) client for checking compromised passwords against [HIBP Pwned Passwords](https://haveibeenpwned.com/Passwords).
 
 Installation
 -----------------
@@ -22,48 +20,33 @@ package main
 
 import (
     "fmt"
+    "net/http"
     "os"
     "time"
 
     hibp "github.com/mattevans/pwned-passwords"
 )
 
-const (
-    storeExpiry = 1 * time.Hour
-)
-
 func main() {
     // Init a client.
-    client := hibp.NewClient(storeExpiry)
+    client := hibp.NewClient()
 
+    // Optional: Use a custom http client
+    client.SetHTTPClient(&http.Client{
+        Timeout: 3 * time.Second,
+    })
+	
     // Check to see if your given string is compromised.
-    pwned, err := client.Pwned.Compromised("string to check")
+    pwned, err := client.Compromised("string to check")
     if err != nil {
         os.Exit(1)
     }
 
     if pwned {
-        // Oh dear! 😱
-        // You should avoid using that password
+        // Oh dear! 😱 -- You should avoid using that password
+        fmt.Print("Found to be compromised")
     }
 }
-```
-
-**Managing the inmemory store**
-
-```go
-// Delete will remove an item from the store by hash.
-client.Store.Delete(HASHED_VALUE)
-```
-
-```go
-// DeleteExpired will remove all expired items from the store.
-client.Store.DeleteExpired()
-```
-
-```go
-// PurgeAll will flush the store.
-client.Store.PurgeAll()
 ```
 
 Contributing
