@@ -122,6 +122,9 @@ func (c *Client) Compromised(value string) (bool, error) {
 	}
 
 	for _, target := range response {
+		if len(target) < 36 {
+			continue
+		}
 		if target[:35] == suffix {
 			if _, err = strconv.ParseInt(target[36:], 10, 64); err != nil {
 				return false, err
