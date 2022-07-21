@@ -15,7 +15,7 @@ import (
 )
 
 const (
-	packageVersion = "0.5.0"
+	packageVersion = "0.6.0"
 	backendURL     = "https://api.pwnedpasswords.com"
 	userAgent      = "pwned-passwords-golang/" + packageVersion
 )
@@ -125,6 +125,7 @@ func (c *Client) Compromised(value string) (bool, error) {
 		if len(target) < 36 {
 			continue
 		}
+
 		if target[:35] == suffix {
 			if _, err = strconv.ParseInt(target[36:], 10, 64); err != nil {
 				return false, err
