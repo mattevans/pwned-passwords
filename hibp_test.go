@@ -19,13 +19,17 @@ func TestClientCustomHTTPClient(t *testing.T) {
 		Timeout: 3 * time.Second,
 	})
 
-	compromised, err := client.Compromised("p@ssword")
+	compromised, count, err := client.Compromised("p@ssword")
 	if err != nil {
 		t.Fatalf("Unexpected error running client.Pwned.Compromised(): %s", err)
 	}
 
 	if !compromised {
 		t.Fatalf("Expected compromised hash (p@ssword) to be true but got: %v", compromised)
+	}
+
+	if count == 0 {
+		t.Fatalf("Expected compromised hash (p@ssword) to have been compromised at least once but got: %v", count)
 	}
 }
 
@@ -36,13 +40,17 @@ func TestCompromisedHash(t *testing.T) {
 
 	client := NewClient()
 
-	compromised, err := client.Compromised("p@ssword")
+	compromised, count, err := client.Compromised("p@ssword")
 	if err != nil {
 		t.Fatalf("Unexpected error running client.Pwned.Compromised(): %s", err)
 	}
 
 	if !compromised {
 		t.Fatalf("Expected compromised hash (p@ssword) to be true but got: %v", compromised)
+	}
+
+	if count == 0 {
+		t.Fatalf("Expected compromised hash (p@ssword) to have been compromised at least once but got: %v", count)
 	}
 }
 
@@ -56,13 +64,17 @@ func TestNonCompromisedHash(t *testing.T) {
 	// Check if input is compromised.
 	value := fmt.Sprintf("SHOULD_NOT_BE_COMPROMISED_%s", time.Now().Format("2006-01-02 15:04:05"))
 
-	compromised, err := client.Compromised(value)
+	compromised, count, err := client.Compromised(value)
 	if err != nil {
 		t.Fatalf("Unexpected error running client.Pwned.Compromised(): %s", err)
 	}
 
 	if compromised {
 		t.Fatalf("Expected non-compromised hash to be false but got: %v", compromised)
+	}
+
+	if count != 0 {
+		t.Fatalf("Expected non-compromised hash to have been compromised exactly 0 times but got: %v", count)
 	}
 }
 
@@ -73,7 +85,7 @@ func TestEmptyCompromisedHash(t *testing.T) {
 	client := NewClient()
 
 	// Check if input is compromised.
-	compromised, err := client.Compromised("")
+	compromised, count, err := client.Compromised("")
 	if err == nil {
 		t.Fatal("Expected error when checking empty value, but got: nil")
 	}
@@ -84,5 +96,9 @@ func TestEmptyCompromisedHash(t *testing.T) {
 
 	if compromised {
 		t.Fatalf("Expected empty compromised hash to be false but got: %v", compromised)
+	}
+
+	if count != 0 {
+		t.Fatalf("Expected empty compromised hash to have been compromised exactly 0 times but got: %v", count)
 	}
 }
