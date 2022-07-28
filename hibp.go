@@ -102,7 +102,13 @@ func (c *Client) Do(req *http.Request) ([]string, error) {
 }
 
 // Compromised will build and execute a request to HIBP to check to see if the passed value is compromised or not.
-func (c *Client) Compromised(value string) (bool, int64, error) {
+func (c *Client) Compromised(value string) (bool, error) {
+	compromised, _, error := c.CompromisedCount(value)
+	return compromised, error
+}
+
+// Compromised will build and execute a request to HIBP to check to see if the passed value is compromised or not.
+func (c *Client) CompromisedCount(value string) (bool, int64, error) {
 	if value == "" {
 		return false, 0, errors.New("value for compromised check cannot be empty")
 	}
