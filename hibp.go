@@ -103,8 +103,14 @@ func (c *Client) Do(req *http.Request) ([]string, error) {
 
 // Compromised will build and execute a request to HIBP to check to see if the passed value is compromised or not.
 func (c *Client) Compromised(value string) (bool, error) {
+	compromised, _, error := c.CompromisedCount(value)
+	return compromised, error
+}
+
+// Compromised will build and execute a request to HIBP to check to see if the passed value is compromised or not.
+func (c *Client) CompromisedCount(value string) (bool, int64, error) {
 	if value == "" {
-		return false, errors.New("value for compromised check cannot be empty")
+		return false, 0, errors.New("value for compromised check cannot be empty")
 	}
 
 	hashedStr := hashString(value)
@@ -113,12 +119,12 @@ func (c *Client) Compromised(value string) (bool, error) {
 
 	request, err := c.NewRequest("GET", fmt.Sprintf("range/%s", prefix), nil)
 	if err != nil {
-		return false, err
+		return false, 0, err
 	}
 
 	response, err := c.Do(request)
 	if err != nil {
-		return false, err
+		return false, 0, err
 	}
 
 	for _, target := range response {
@@ -127,15 +133,16 @@ func (c *Client) Compromised(value string) (bool, error) {
 		}
 
 		if target[:35] == suffix {
-			if _, err = strconv.ParseInt(target[36:], 10, 64); err != nil {
-				return false, err
+			var count int64
+			if count, err = strconv.ParseInt(target[36:], 10, 64); err != nil {
+				return false, 0, err
 			}
 
-			return true, err
+			return true, count, err
 		}
 	}
 
-	return false, err
+	return false, 0, err
 }
 
 // hashString will return a sha1 hash of the given value.
